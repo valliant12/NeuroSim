@@ -54,8 +54,13 @@ if __name__ == '__main__':
     print("Boop!\n")
 
 
-def assign_neurons(number, stimuli):
-    """Return a list of strings, len = number, with distro. assigned based on provided proportions."""
+def assign_neurons(number, stimuli, overlap_chance=0.5):
+    """Return a list of strings, len = number, with distro. assigned based on provided proportions.
+
+    overlap_chance refers to the probability of a neuron ATTEMPTING to generate
+    a new type as well, not the proportion of neurons that are multi-sensing.
+    Eg, if an "audio" neuron has a 50% chance, it will pick a "new type" 50%
+    of the time. If that "new type" is audio, it will not change."""
     neuron_list = list()
 
     # Construct dict of stimuli proportions
@@ -68,19 +73,20 @@ def assign_neurons(number, stimuli):
     print(stimulus_proportions)
 
     for neuron in range(number):
-        neuron_list.append(weighted_choice(stimulus_proportions))
+        neuron_list.append((weighted_choice(stimulus_proportions),))
+
+    def overlap_neuron():
+        for i in range(len(neuron_list)):
+            if random.random() < overlap_chance:
+                new_neuron = weighted_choice(stimulus_proportions)
+                print(new_neuron, neuron_list[i])
+                if new_neuron not in neuron_list[i]:
+                    neuron_list[i] += (new_neuron,)
+
+    overlap_neuron()
+
     print(neuron_list)
     return neuron_list
-
-
-
-# def assign_neurons(number, proportions):
-#     """Return a list of strings, len = number, with distro. assigned
-# based on provided proportions."""
-#     neuron_list = list()
-#     for i in range(number):
-#         neuron_list.append(weighted_choice(proportions))
-#     return neuron_list
 
 
 def if_fire(neuron_type_list, neuron_fired_list, stimulus_type,

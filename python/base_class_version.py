@@ -1,9 +1,9 @@
 """Dooba doo."""
 
 import random
-import re
 
 import numpy as np
+import pandas as pd
 
 
 """
@@ -27,65 +27,69 @@ class Stimulus:
         self.spontaneous_rate = spontaneous_rate  # Prob of firing randomly
 
     def __repr__(self):
-        return """Stimulus(name={0}, proportion={1}, refractory_length={2}, response_rate={3}, spontaneous_rate={4})
-                           """.format(self.name,
-                                      self.proportion,
-                                      self.refractory_length,
-                                      self.response_rate,
-                                      self.spontaneous_rate)
+        return """Stimulus(name={0}, proportion={1}, refractory_length={2},
+                  response_rate={3}, spontaneous_rate={4})
+               """.format(self.name,
+                          self.proportion,
+                          self.refractory_length,
+                          self.response_rate,
+                          self.spontaneous_rate)
 
 
 stimulus_dict = {
-    "audio":          Stimulus(name="audio",
-                               proportion=1,
-                               refractory_length=3,
-                               response_rate=1,
-                               spontaneous_rate=0),
-    "olfactory":      Stimulus(name="olfactory",
-                               proportion=1,
-                               refractory_length=1,
-                               response_rate=1,
-                               spontaneous_rate=0),
-}
+    "audio": Stimulus(name="audio",
+                      proportion=1,
+                      refractory_length=3,
+                      response_rate=1,
+                      spontaneous_rate=0),
 
-print(stimulus_dict["audio"])
+    "olfactory": Stimulus(name="olfactory",
+                          proportion=1,
+                          refractory_length=1,
+                          response_rate=1,
+                          spontaneous_rate=0),
+}
 
 if __name__ == '__main__':
     print("Boop!\n")
 
 
-def assign_neurons(number, stimuli, overlap_chance=0.5):
-    """Return a list of strings, len = number, with distro. assigned based on provided proportions.
+def assign_neurons(number=10, stimuli=None, overlap_chance=0.5):
+    """Generate list of neuron types.
 
     overlap_chance refers to the probability of a neuron ATTEMPTING to generate
     a new type as well, not the proportion of neurons that are multi-sensing.
     Eg, if an "audio" neuron has a 50% chance, it will pick a "new type" 50%
-    of the time. If that "new type" is audio, it will not change."""
+    of the time. If that "new type" is audio, it will not change.
+    """
     neuron_list = list()
 
     # Construct dict of stimuli proportions
 
     stimulus_proportions = {}
 
-    for stimulus in stimuli:
-        stimulus_proportions[stimulus] = stimuli[stimulus].proportion
+    try:
+        for stimulus in stimuli:
+            stimulus_proportions[stimulus] = stimuli[stimulus].proportion
 
-    print(stimulus_proportions)
+        print("Stimulus ratios: ", stimulus_proportions, "\n")
+
+    except:
+        raise ValueError("Unable to find proportion method in stimulus: {}".format(stimulus))
 
     for neuron in range(number):
         neuron_list.append((weighted_choice(stimulus_proportions),))
 
-    def overlap_neuron():
-        for i in range(len(neuron_list)):
-            if random.random() < overlap_chance:
-                new_neuron = weighted_choice(stimulus_proportions)
-                print(new_neuron, neuron_list[i])
-                if new_neuron not in neuron_list[i]:
-                    neuron_list[i] += (new_neuron,)
+    # Overlap neurons
+    for i in range(len(neuron_list)):
+        if random.random() < overlap_chance:
+            new_neuron = weighted_choice(stimulus_proportions)
+            print("Attempting to add stim: {0} to {1}".format
+                  (new_neuron, neuron_list[i]))
+            if new_neuron not in neuron_list[i]:
+                neuron_list[i] += (new_neuron,)
+    print()
 
-    overlap_neuron()
-
-    print(neuron_list)
     return neuron_list
 
 
@@ -95,10 +99,6 @@ def if_fire(neuron_type_list, neuron_fired_list, stimulus_type,
         if neuron_type_list[neuron].lower() == stimulus_type.lower():
             if random.random() < fire_rate_dict[neuron_type_list[neuron]]:
                 neuron_fired_list[neuron] = True
-            else:
-                pass
-        else:
-            pass
 
     return neuron_fired_list
 
@@ -107,6 +107,10 @@ def generate_neurons(number=300, time_steps=500):
     """Create an empty array with n neurons, over t steps."""
     neurons = np.zeros(shape=(number, time_steps))
     return neurons
+
+
+def print_neurons():
+    pass
 
 
 def pulse_neurons(neurons_array, fired_neurons_list, time_point,
@@ -119,6 +123,7 @@ def pulse_neurons(neurons_array, fired_neurons_list, time_point,
             neurons_array[i][time_point] = 1
     return neurons_array
 
+
 def pulse_neurons_class(neurons_array, stimulus_class, time_point):
     """Class version."""
     try:
@@ -126,9 +131,6 @@ def pulse_neurons_class(neurons_array, stimulus_class, time_point):
     except:
         raise Exception("stimulus_class must be an instance of Stimulus.")
 
-
-def generate_response_types():
-    pass
 
 def weighted_choice(choices):
     """Like random.choice, but each element can have a different chance of
@@ -163,27 +165,16 @@ def weighted_choice(choices):
 
 def main():
     """The main function."""
-    neuron_count = 5
-    neuron_proportion = {
-        "audio"  : 0.8,
-        "visual" : 0.5,
-        "dead"   : 0,
-        "other"  : 0,
-    }
-    response_rate = {
-        "audio"  : 0.5,
-        "visual" : 0.3,
-        "random" : 0.5,
-    }
+    neuron_count = 10
 
     time_steps = 5
 
     neurons = generate_neurons(number=neuron_count, time_steps=time_steps)
 
-    print("Response rates: {}".format(response_rate))
-
     fired_neurons = [False] * neuron_count
     neuron_types = assign_neurons(neuron_count, stimulus_dict)
+
+    print(neuron_types, "\n")
 
 
 if __name__ == '__main__':

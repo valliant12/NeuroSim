@@ -91,6 +91,7 @@ class Spike:
                        "duration of {interspike_duration}.")
 
             burst_freq = self.rate / spikes_per_burst
+            spikes = []
 
             for i in range(0, self.repeats):
                 burst_count = np.random.poisson(burst_freq * self.train_length)
@@ -100,9 +101,17 @@ class Spike:
                     spike_count_array = np.random.poisson(spikes_per_burst)
 
                     if spike_count_array > 0:
-                        burst_list[j] =
+                        burst_list.append(random.random()*self.train_length + np.sum(interspike_duration * np.random.poisson(10,spike_count_array)))
+
+                print(type(spikes))
+                spikes += burst_list
+                spikes = sorted(spikes)
 
                 print(burst_count)
+
+                print("Burst list: ",burst_list)
+
+            print("Spikes: ", spikes)
 
 
 
